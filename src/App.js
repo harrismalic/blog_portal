@@ -1,24 +1,25 @@
-import logo from './logo.svg';
-import './App.css';
+import logo from "./logo.svg";
+import "./App.css";
+import { Divider } from "antd";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import FrontendLayout from "./Pages/layouts/FrontendLayout";
+import Home from "./Pages/Home";
+import { UNAUTHENTICATED_ROUTES } from "./Utils/Constant";
+import PostDetail from "./Pages/PostDetail";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route element={<FrontendLayout />}>
+          <Route path={UNAUTHENTICATED_ROUTES.HOME} element={<Home />} />
+          <Route
+            path={UNAUTHENTICATED_ROUTES.POST_DETAIL}
+            element={<PostDetail />}
+          />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
 
