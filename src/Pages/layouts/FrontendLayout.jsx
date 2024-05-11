@@ -1,10 +1,47 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import "../../Frontend-assets/css/bootstrap.min.css";
 import "../../Frontend-assets/css/blog-home.css";
-import { Link, Outlet } from "react-router-dom";
-import { UNAUTHENTICATED_ROUTES } from "../../Utils/Constant";
+import { Link, Outlet, useNavigate } from "react-router-dom";
+import {
+  AUTHENTICATED_ROUTE,
+  UNAUTHENTICATED_ROUTES,
+} from "../../Utils/Constant";
+import { useQueries, useQuery } from "react-query";
+import { CategoryService } from "../../services/categories.services";
+import { AuthServices } from "../../services/authService";
 
 function FrontendLayout() {
+  const { data: categoryData } = useQuery("category", () =>
+    CategoryService.getCategory()
+  );
+  const fiveCategories = useMemo(
+    () => categoryData?.data?.results?.splice(0, 5),
+    [categoryData]
+  );
+  const tenCategories = useMemo(
+    () => categoryData?.data?.results?.splice(0, 10),
+    [categoryData]
+  );
+
+  // console.log(categoryData?.data?.results, "categoryData");
+  // console.log(categoryData, "categoryData");
+  // console.log(fiveCategories, "fiveCategories");
+
+  const [searchInput, setSearchInput] = useState("");
+
+  const navigate = useNavigate();
+
+  const searchInputHandler = (e) => {
+    e.preventDefault();
+    setSearchInput(e.target.value);
+  };
+
+  const searchSubmitHandler = (e) => {
+    e.preventDefault();
+    navigate(
+      UNAUTHENTICATED_ROUTES.SEARCH_DETAIL.replace(":query", searchInput)
+    );
+  };
   return (
     <>
       {/* <!-- Navigation --> */}
@@ -33,10 +70,49 @@ function FrontendLayout() {
             id="bs-example-navbar-collapse-1"
           >
             <ul className="nav navbar-nav">
+              {fiveCategories?.length > 0 &&
+                fiveCategories.map((singleCategory) => {
+                  return (
+                    <li key={singleCategory?.cat_id}>
+                      <Link
+                        to={UNAUTHENTICATED_ROUTES.CATEGORY_DETAIL.replace(
+                          ":catid",
+                          singleCategory?.cat_id
+                        )}
+                      >
+                        {singleCategory?.cat_title}
+                      </Link>
+                    </li>
+                  );
+                })}
+              {AuthServices.isUserLoggedIn() ? (
+                <>
+                  <li>
+                    <Link to={AUTHENTICATED_ROUTE.DASHBOARD}>Dashboard</Link>
+                  </li>
+                  <li>
+                    <a
+                      href="#"
+                      onClick={() => {
+                        AuthServices.removeToken();
+                        window.location.href = UNAUTHENTICATED_ROUTES.LOGIN;
+                      }}
+                    >
+                      Logout
+                    </a>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li>
+                    <Link to={UNAUTHENTICATED_ROUTES.REGISTER}>Register</Link>
+                  </li>
+                  <li>
+                    <Link to={UNAUTHENTICATED_ROUTES.LOGIN}>Login</Link>
+                  </li>
+                </>
+              )}
               {/* <li>
-                <a href="#">About</a>
-              </li>
-              <li>
                 <a href="#">Services</a>
               </li>
               <li>
@@ -53,7 +129,12 @@ function FrontendLayout() {
       <div className="container">
         <div className="row">
           {/* <!-- Blog Entries Column --> */}
-          <div className="col-md-8">
+          <div
+            className="col-md-8"
+            style={{
+              paddingTop: 70,
+            }}
+          >
             <Outlet />
             <div />
 
@@ -73,14 +154,25 @@ function FrontendLayout() {
             {/* <!-- Blog Search Well --> */}
             <div className="well">
               <h4>Blog Search</h4>
-              <div className="input-group">
-                <input type="text" className="form-control" />
-                <span className="input-group-btn">
-                  <button className="btn btn-default" type="button">
-                    <span className="glyphicon glyphicon-search"></span>
-                  </button>
-                </span>
-              </div>
+              <form onSubmit={searchSubmitHandler}>
+                <div className="input-group">
+                  <input
+                    type="text"
+                    className="form-control"
+                    onChange={searchInputHandler}
+                    value={searchInput}
+                  />
+                  <span className="input-group-btn">
+                    <button
+                      className="btn btn-default"
+                      type="submit"
+                      disabled={!Boolean(searchInput)}
+                    >
+                      <span className="glyphicon glyphicon-search"></span>
+                    </button>
+                  </span>
+                </div>
+              </form>
               {/* <!-- /.input-group --> */}
             </div>
 
@@ -90,7 +182,23 @@ function FrontendLayout() {
               <div className="row">
                 <div className="col-lg-6">
                   <ul className="list-unstyled">
-                    <li>
+                    {tenCategories?.length > 0 &&
+                      tenCategories.map((singleCategory) => {
+                        return (
+                          <li>
+                            <Link
+                              to={UNAUTHENTICATED_ROUTES.CATEGORY_DETAIL.replace(
+                                ":catid",
+                                singleCategory?.cat_id
+                              )}
+                            >
+                              {singleCategory?.cat_title}
+                            </Link>
+                          </li>
+                        );
+                      })}
+
+                    {/* <li>
                       <a href="#">Category Name</a>
                     </li>
                     <li>
@@ -98,16 +206,28 @@ function FrontendLayout() {
                     </li>
                     <li>
                       <a href="#">Category Name</a>
-                    </li>
-                    <li>
-                      <a href="#">Category Name</a>
-                    </li>
+                    </li> */}
                   </ul>
                 </div>
                 {/* <!-- /.col-lg-6 --> */}
                 <div className="col-lg-6">
                   <ul className="list-unstyled">
-                    <li>
+                    {tenCategories?.length > 0 &&
+                      tenCategories.map((singleCategory) => {
+                        return (
+                          <li>
+                            <Link
+                              to={UNAUTHENTICATED_ROUTES.CATEGORY_DETAIL.replace(
+                                ":catid",
+                                singleCategory?.cat_id
+                              )}
+                            >
+                              {singleCategory?.cat_title}
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    {/* <li>
                       <a href="#">Category Name</a>
                     </li>
                     <li>
@@ -118,7 +238,7 @@ function FrontendLayout() {
                     </li>
                     <li>
                       <a href="#">Category Name</a>
-                    </li>
+                    </li> */}
                   </ul>
                 </div>
                 {/* <!-- /.col-lg-6 --> */}

@@ -1,62 +1,99 @@
-import React from "react";
+import React, { useState } from "react";
+import { useMutation, useQuery } from "react-query";
+import { Link, useParams } from "react-router-dom";
+import { postService } from "../services/post.service";
+import { Spin, message } from "antd";
+import { helperService } from "../Utils/helper";
+import { UNAUTHENTICATED_ROUTES } from "../Utils/Constant";
+import { commentService } from "../services/comment.service";
 
 function PostDetail() {
+  const { postId } = useParams();
+
+  const [comments, setComments] = useState("");
+  const [messageApi, contextHolder] = message.useMessage();
+
+  const { mutateAsync: commentRequest, isLoading: commentRequestLoading } =
+    useMutation(["storeComments", postId], (payload) =>
+      commentService.storeComment(payload)
+    );
+
+  const commentsChangeHandler = (event) => {
+    event.preventDefault();
+    setComments(event.target.value);
+  };
+
+  const commentSubmitHandler = (e) => {
+    e.preventDefault();
+    const payload = {
+      comment_content: comments,
+      post_id: postId,
+    };
+    commentRequest(payload, {
+      onSuccess: () => {
+        messageApi.open({
+          type: "success",
+          content: "Comment added sucessfully but approval is required",
+        });
+        setComments("");
+      },
+    });
+  };
+
+  const { data: postDetailData, isLoading: postDetailLoading } = useQuery(
+    ["postDetail", postId],
+    () => postService?.getPostById(postId),
+    {
+      enabled: Boolean(postId),
+    }
+  );
+  const postDetailDataExact = postDetailData?.data?.results;
   return (
-    <div>
+    <Spin spinning={postDetailLoading}>
+      {contextHolder}
       {/* <!-- Blog Post --> */}
 
       {/* <!-- Title --> */}
-      <h1>Blog Post Title</h1>
+      <h2>Post Detail</h2>
+      <h1>{postDetailDataExact?.post_title}</h1>
 
       {/* <!-- Author --> */}
       <p class="lead">
-        by <a href="#">Start Bootstrap</a>
+        by <a href="#">{postDetailDataExact?.post_author}</a>
       </p>
 
       <hr />
 
       {/* <!-- Date/Time --> */}
       <p>
-        <span class="glyphicon glyphicon-time"></span> Posted on August 24, 2013
-        at 9:00 PM
+        <span class="glyphicon glyphicon-time"></span> Posted on{" "}
+        {helperService.convertDateToOurFormate(postDetailDataExact?.post_date)}
       </p>
 
       <hr />
 
       {/* <!-- Preview Image --> */}
-      <img class="img-responsive" src="http://placehold.it/900x300" alt="" />
+      <Link
+        to={UNAUTHENTICATED_ROUTES?.POST_DETAIL.replace(
+          ":postId",
+          postDetailDataExact?.id
+        )}
+      >
+        {postDetailDataExact?.image ? (
+          <img src={postDetailDataExact?.image} />
+        ) : (
+          <img
+            className="img-responsive"
+            src="http://placehold.it/900x300"
+            alt=""
+          />
+        )}
+      </Link>
 
       <hr />
 
       {/* <!-- Post Content --> */}
-      <p class="lead">
-        Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ducimus, vero,
-        obcaecati, aut, error quam sapiente nemo saepe quibusdam sit excepturi
-        nam quia corporis eligendi eos magni recusandae laborum minus inventore?
-      </p>
-      <p>
-        Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ut, tenetur
-        natus doloremque laborum quos iste ipsum rerum obcaecati impedit odit
-        illo dolorum ab tempora nihil dicta earum fugiat. Temporibus,
-        voluptatibus.
-      </p>
-      <p>
-        Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eos,
-        doloribus, dolorem iusto blanditiis unde eius illum consequuntur neque
-        dicta incidunt ullam ea hic porro optio ratione repellat perspiciatis.
-        Enim, iure!
-      </p>
-      <p>
-        Lorem ipsum dolor sit amet, consectetur adipisicing elit. Error,
-        nostrum, aliquid, animi, ut quas placeat totam sunt tempora commodi
-        nihil ullam alias modi dicta saepe minima ab quo voluptatem obcaecati?
-      </p>
-      <p>
-        Lorem ipsum dolor sit amet, consectetur adipisicing elit. Harum, dolor
-        quis. Sunt, ut, explicabo, aliquam tenetur ratione tempore quidem
-        voluptates cupiditate voluptas illo saepe quaerat numquam recusandae?
-        Qui, necessitatibus, est!
-      </p>
+      <p class="lead">{postDetailDataExact?.post_content}</p>
 
       <hr />
 
@@ -65,75 +102,27 @@ function PostDetail() {
       {/* <!-- Comments Form --> */}
       <div class="well">
         <h4>Leave a Comment:</h4>
-        <form role="form">
+        <form role="form" onSubmit={commentSubmitHandler}>
           <div class="form-group">
-            <textarea class="form-control" rows="3"></textarea>
+            <textarea
+              class="form-control"
+              rows="3"
+              onChange={commentsChangeHandler}
+              value={comments}
+            ></textarea>
           </div>
-          <button type="submit" class="btn btn-primary">
+          <button
+            type="submit"
+            class="btn btn-primary"
+            disabled={!Boolean(comments) || commentRequestLoading}
+          >
             Submit
           </button>
         </form>
       </div>
 
       <hr />
-
-      {/* <!-- Posted Comments --> */}
-
-      {/* <!-- Comment --> */}
-      <div class="media">
-        <a class="pull-left" href="#">
-          <img class="media-object" src="http://placehold.it/64x64" alt="" />
-        </a>
-        <div class="media-body">
-          <h4 class="media-heading">
-            Start Bootstrap
-            <small>August 25, 2014 at 9:30 PM</small>
-          </h4>
-          Cras sit amet nibh libero, in gravida nulla. Nulla vel metus
-          scelerisque ante sollicitudin commodo. Cras purus odio, vestibulum in
-          vulputate at, tempus viverra turpis. Fusce condimentum nunc ac nisi
-          vulputate fringilla. Donec lacinia congue felis in faucibus.
-        </div>
-      </div>
-
-      {/* <!-- Comment --> */}
-      <div class="media">
-        <a class="pull-left" href="#">
-          <img class="media-object" src="http://placehold.it/64x64" alt="" />
-        </a>
-        <div class="media-body">
-          <h4 class="media-heading">
-            Start Bootstrap
-            <small>August 25, 2014 at 9:30 PM</small>
-          </h4>
-          Cras sit amet nibh libero, in gravida nulla. Nulla vel metus
-          scelerisque ante sollicitudin commodo. Cras purus odio, vestibulum in
-          vulputate at, tempus viverra turpis. Fusce condimentum nunc ac nisi
-          vulputate fringilla. Donec lacinia congue felis in faucibus.
-          {/* <!-- Nested Comment --> */}
-          <div class="media">
-            <a class="pull-left" href="#">
-              <img
-                class="media-object"
-                src="http://placehold.it/64x64"
-                alt=""
-              />
-            </a>
-            <div class="media-body">
-              <h4 class="media-heading">
-                Nested Start Bootstrap
-                <small>August 25, 2014 at 9:30 PM</small>
-              </h4>
-              Cras sit amet nibh libero, in gravida nulla. Nulla vel metus
-              scelerisque ante sollicitudin commodo. Cras purus odio, vestibulum
-              in vulputate at, tempus viverra turpis. Fusce condimentum nunc ac
-              nisi vulputate fringilla. Donec lacinia congue felis in faucibus.
-            </div>
-          </div>
-          {/* <!-- End Nested Comment --> */}
-        </div>
-      </div>
-    </div>
+    </Spin>
   );
 }
 

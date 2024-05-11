@@ -1,42 +1,39 @@
-import React from "react";
+import React, { useMemo } from "react";
+import { useQuery } from "react-query";
+import { postService } from "../services/post.service";
+import { helperService } from "../Utils/helper";
+import SinglePost from "../components/singlepost/SinglePost";
+// import { useMatch } from "react-router-dom";
 
 function Home() {
+  const { data: postData, isLoading: postLoder } = useQuery("posts", () =>
+    postService.getPost()
+  );
+
+  const posts = useMemo(
+    () => postData?.data?.results,
+    [postData?.data?.results]
+  );
+
+  // console.log(postData?.data?.results, "postData");
+
+  if (postLoder) {
+    return <h2>Loading....</h2>;
+  }
+
   return (
     <div>
-      <h1 className="page-header">
-        Page Heading
-        <small>Secondary Text</small>
-      </h1>
+      <h1 className="page-header">Blog Post</h1>
 
       {/* <!-- First Blog Post --> */}
-      <h2>
-        <a href="#">Blog Post Title</a>
-      </h2>
-      <p className="lead">
-        by <a href="index.php">Start Bootstrap</a>
-      </p>
-      <p>
-        <span className="glyphicon glyphicon-time"></span> Posted on August 28,
-        2013 at 10:00 PM
-      </p>
-      <hr />
-      <img
-        className="img-responsive"
-        src="http://placehold.it/900x300"
-        alt=""
-      />
-      <hr />
-      <p>
-        Lorem ipsum dolor sit amet, consectetur adipisicing elit. Dolore,
-        veritatis, tempora, necessitatibus inventore nisi quam quia repellat ut
-        tempore laborum possimus eum dicta id animi corrupti debitis ipsum
-        officiis rerum.
-      </p>
-      <a className="btn btn-primary" href="#">
-        Read More <span className="glyphicon glyphicon-chevron-right"></span>
-      </a>
 
-      <hr />
+      {posts?.length > 0 ? (
+        posts.map((singlePost) => {
+          return <SinglePost singlePost={singlePost} />;
+        })
+      ) : (
+        <h2>No Post Found</h2>
+      )}
     </div>
   );
 }
